@@ -6,6 +6,7 @@ from ament_index_python.packages import get_package_share_directory
 from os.path import join 
 from launch.substitutions import Command
 from pathlib import Path
+from launch.actions import TimerAction
 import os
 
 def generate_launch_description():
@@ -71,12 +72,17 @@ def generate_launch_description():
     )
 
     # Step 5: Enable the ros2 controllers
-    start_controllers  = Node(
-                package="controller_manager",
-                executable="spawner",
-                arguments=['joint_state_broadcaster', 'diff_drive_base_controller'],
-                output="screen",
-            )
+    start_controllers  = TimerAction(
+        period=3.0,
+        actions=[
+        Node(
+                    package="controller_manager",
+                    executable="spawner",
+                    arguments=['joint_state_broadcaster', 'diff_drive_base_controller'],
+                    output="screen",
+                )
+            ]
+        )
 
     twist_stamper = Node(
         package="twist_stamper",
