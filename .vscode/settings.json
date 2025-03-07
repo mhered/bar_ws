@@ -15,5 +15,11 @@
     "ros.distro": "",
     "llm.backend": "ollama",
     "llm.configTemplate": "ollama/codellama:7b",
-    "llm.modelId": "codellama:7b"
+    "llm.modelId": "codellama:7b",
+    "cmake.sourceDirectory": "/home/mhered/bar_ws/src/pymoveit2",
+    "urdf-visualizer.packages": {
+        "my_robot_arm": "${workspaceFolder}/src/my_robot_arm",
+        "magni_description": "${workspaceFolder}/src/bar_examples/magni_description",
+        "ur_description": "/opt/ros/jazzy/share/ur_description"
+    }
 }
