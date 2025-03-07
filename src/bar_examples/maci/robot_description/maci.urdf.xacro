@@ -5,7 +5,7 @@
 
     <xacro:include filename="$(find sensors)/realsense_d435/realsense.urdf.xacro" />
 
-    <!-- Include a UR10 -->
+    <!-- Include a UR05 -->
     <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro" />
     <xacro:arg name="ur_type" default="ur5e"/>
 
