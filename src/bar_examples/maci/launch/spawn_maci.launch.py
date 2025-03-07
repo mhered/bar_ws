@@ -6,6 +6,7 @@ from os.path import join
 from launch_param_builder import load_xacro
 from pathlib import Path
 from launch.substitutions import Command
+from launch.actions import TimerAction
 
 """
 This launch assumes that gazebo is already running with the krytn simulation. 
@@ -40,11 +41,16 @@ def generate_launch_description():
     )
 
     # Step 5: Enable the ros2 controllers
-    start_controllers  = Node(
+    start_controllers  = TimerAction(
+        period=20.0,
+        actions=[
+            Node(
                 package="controller_manager",
                 executable="spawner",
                 arguments=['maci_joint_state_broadcaster', 'maci_controller', 'gripper_controller'],
                 output="screen",
             )
+        ]
+    )
 
     return LaunchDescription([robot_state_publisher, start_controllers, robot ])
