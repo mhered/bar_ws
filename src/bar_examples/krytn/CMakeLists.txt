@@ -29,6 +29,7 @@ install(PROGRAMS
    krytn/app.py
    krytn/move_krytn_action.py
    krytn/move_krytn_topic.py
+   krytn/dock_krytn.py
    DESTINATION lib/${PROJECT_NAME}
 )
 
