@@ -13,6 +13,8 @@ def generate_launch_description():
 
     # Start a simulation with the cafe world
     cafe_world_uri = join(get_package_share_directory("gamecity"), "worlds", "gamecity.sdf")
+    # cafe_world_uri = join(get_package_share_directory("my_room"), "worlds", "my_room.sdf")
+    
     path = join(get_package_share_directory("ros_gz_sim"), "launch", "gz_sim.launch.py")
     
     gazebo_sim = IncludeLaunchDescription(path,
@@ -73,7 +75,7 @@ def generate_launch_description():
 
     # Step 5: Enable the ros2 controllers
     start_controllers  = TimerAction(
-        period=3.0,
+        period=10.0,
         actions=[
         Node(
                     package="controller_manager",
