@@ -3,5 +3,13 @@ from moveit_configs_utils.launches import generate_move_group_launch
 
 
 def generate_launch_description():
-    moveit_config = MoveItConfigsBuilder("my_robot_arm", package_name="my_robot_arm_moveit").to_moveit_configs()
+    moveit_config = MoveItConfigsBuilder(
+        "my_robot_arm", 
+        package_name="my_robot_arm_moveit"
+        ).to_moveit_configs()
+
+    # needed to fix a bug in the moveit2 package. 
+    # Without this it complains it cannot find capabilities
+    moveit_config.move_group_capabilities["capabilities"] = ""
+
     return generate_move_group_launch(moveit_config)
