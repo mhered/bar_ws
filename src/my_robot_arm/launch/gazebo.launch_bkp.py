@@ -6,6 +6,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
 from launch.conditions import IfCondition
+from launch.conditions import UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PathJoinSubstitution
@@ -18,15 +19,30 @@ from launch.actions import TimerAction
 from launch.actions import ExecuteProcess 
 from os.path import join
 
-from launch_param_builder import load_xacro
-from pathlib import Path
 
 def generate_launch_description():
 
     resources_package = 'my_robot_arm'
 
+    """
+    # Commented out to avoid path error
+
     # Make path to resources dir without last package_name fragment.
     path_to_share_dir_clipped = ''.join(get_package_share_directory(resources_package).rsplit('/' + resources_package, 1))
+
+    # Gazebo hint for resources.
+    os.environ['GZ_SIM_RESOURCE_PATH'] = path_to_share_dir_clipped
+
+    # Ensure `SDF_PATH` is populated since `sdformat_urdf` uses this rather
+    # than `GZ_SIM_RESOURCE_PATH` to locate resources.
+    if "GZ_SIM_RESOURCE_PATH" in os.environ:
+        gz_sim_resource_path = os.environ["GZ_SIM_RESOURCE_PATH"]
+
+        if "SDF_PATH" in os.environ:
+            sdf_path = os.environ["SDF_PATH"]
+            os.environ["SDF_PATH"] = sdf_path + ":" + gz_sim_resource_path
+        else:
+            os.environ["SDF_PATH"] = gz_sim_resource_path """
 
     # Gazebo Sim.
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
@@ -37,31 +53,18 @@ def generate_launch_description():
         launch_arguments=dict(gz_args='-r empty.sdf --verbose').items(),
     )
 
-    # Step 1. Process robot file. 
-    robot_file = join(get_package_share_directory("my_robot_arm"), "urdf","my_robot_arm.urdf.xacro")
-    robot_xml = load_xacro(Path(robot_file))
-
-
-    #Step 2. Publish robot file to ros topic /robot_description & static joint positions to /tf
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='both',
-        parameters=[{'robot_description':robot_xml, 
-                     'use_sim_time':True}],
-    )
-
-    # Step 3. Spawn a robot in gazebo by listening to the published topic.
-    robot = Node(
-        package='ros_gz_sim',
-        executable="create",
-        arguments=[
-            "-topic", "/robot_description", 
-            "-z", "0.5",
-        ],
-        name="spawn_robot",
-        output="both"
+    # Spawn
+    spawn = Node(
+            package='ros_gz_sim',
+            executable='create',
+            arguments=[
+                '-name', 'my_robot_arm.urdf',
+                '-x', '1.2',
+                '-z', '2.3',
+                '-Y', '3.4',
+                '-topic', '/robot_description',
+            ],
+            output='screen',
     )
 
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -70,9 +73,24 @@ def generate_launch_description():
 
     use_rviz = LaunchConfiguration('use_rviz')
 
-    use_rviz_arg = DeclareLaunchArgument("use_rviz", default_value='true')
+    # set to 'fasle' as per recommendation post by Nathan in the Discord channel 
+    use_rviz_arg = DeclareLaunchArgument("use_rviz", default_value='false')
 
-   
+    robot_state_publisher = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([
+                    FindPackageShare(resources_package),
+                    'launch',
+                    'description.launch.py',
+                ]),
+            ]),
+            condition=UnlessCondition(use_rviz),  # rviz launch includes rsp.
+            launch_arguments=dict(use_sim_time=use_sim_time).items(),
+    )
+
+    
+    """
+    # Removed as it is superseded by moveit_rviz.launch.py
     rviz = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
@@ -82,7 +100,9 @@ def generate_launch_description():
             ]),
         ]),
         condition=IfCondition(use_rviz),
+        launch_arguments={'gui': 'true'}.items(),
     )
+    """
 
     # Step 5: Enable the ros2 controllers
     start_controllers  = TimerAction(
@@ -97,13 +117,14 @@ def generate_launch_description():
         ]
     )
 
+
      # Gazebo Bridge: This brings data (sensors/clock) out of gazebo into ROS.
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
                    ],
-        output='screen')    
+        output='screen')   
     
     move_group = IncludeLaunchDescription(
         join(get_package_share_directory("my_robot_arm_moveit"), 
@@ -126,7 +147,7 @@ def generate_launch_description():
         robot_state_publisher,
         rviz,
         gazebo,
-        robot,
+        spawn,
         start_controllers,
         bridge,
         move_group,
