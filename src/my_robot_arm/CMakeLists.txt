@@ -23,5 +23,6 @@ ament_package()
 
 install(PROGRAMS
    my_robot_arm/gripper.py
+   my_robot_arm/arm.py
    DESTINATION lib/${PROJECT_NAME}
 )
