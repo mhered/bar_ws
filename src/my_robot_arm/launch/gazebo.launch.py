@@ -25,9 +25,6 @@ def generate_launch_description():
 
     resources_package = 'my_robot_arm'
 
-    # Make path to resources dir without last package_name fragment.
-    path_to_share_dir_clipped = ''.join(get_package_share_directory(resources_package).rsplit('/' + resources_package, 1))
-
     # Gazebo Sim.
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
     gazebo = IncludeLaunchDescription(
@@ -58,13 +55,11 @@ def generate_launch_description():
         executable="create",
         arguments=[
             "-topic", "/robot_description", 
-            "-z", "0.5",
+            "-z", "1.5", # was 0.5 but then arm hits floor
         ],
         name="spawn_robot",
         output="both"
     )
-
-    use_sim_time = LaunchConfiguration('use_sim_time')
 
     use_sim_time_launch_arg = DeclareLaunchArgument('use_sim_time', default_value='true')
 
