@@ -27,11 +27,18 @@ def generate_launch_description():
 
     # Gazebo Sim.
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
+
+    world_file = os.path.join(
+        get_package_share_directory(resources_package),
+        'urdf',
+        'coke_pickup.sdf'
+    )
+    
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'),
         ),
-        launch_arguments=dict(gz_args='-r empty.sdf --verbose').items(),
+        launch_arguments=dict(gz_args=f'-r {world_file} --verbose').items(),
     )
 
     # Step 1. Process robot file. 
@@ -55,7 +62,7 @@ def generate_launch_description():
         executable="create",
         arguments=[
             "-topic", "/robot_description", 
-            "-z", "1.5", # was 0.5 but then arm hits floor
+            "-z", "1.0", # was 0.5 but then arm hits floor
         ],
         name="spawn_robot",
         output="both"
