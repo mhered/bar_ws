@@ -61,6 +61,7 @@ def generate_launch_description():
         package='ros_gz_sim',
         executable="create",
         arguments=[
+            "-name", "my_robot_arm.urdf",
             "-topic", "/robot_description", 
             "-z", "1.0", # was 0.5 but then arm hits floor
         ],
@@ -99,13 +100,23 @@ def generate_launch_description():
         ]
     )
 
-     # Gazebo Bridge: This brings data (sensors/clock) out of gazebo into ROS.
+    # Step 6: Gazebo Bridge: This brings data (sensors/clock) out of gazebo into ROS.
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-                   ],
+                '/realsense/image@sensor_msgs/msg/Image[gz.msgs.Image',
+                '/realsense/depth@sensor_msgs/msg/Image[gz.msgs.Image',
+                '/realsense/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            ],
         output='screen')    
+    
+    # Step 7: Publish static transforms    
+    static_pub = Node(package="tf2_ros", 
+                      executable="static_transform_publisher",
+                      arguments=["0","0","0","0","0","0", 
+                                 "realsense_link", 
+                                 "my_robot_arm.urdf/realsense_link/realsense_d435", ])
     
     move_group = IncludeLaunchDescription(
         join(get_package_share_directory("my_robot_arm_moveit"), 
@@ -133,4 +144,5 @@ def generate_launch_description():
         bridge,
         move_group,
         mg_sim_time,
+        static_pub,
     ])
