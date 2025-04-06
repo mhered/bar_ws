@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(my_robot_arm)
 
 find_package(ament_cmake REQUIRED)
+find_package(realsense2_description REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
