@@ -25,5 +25,6 @@ ament_package()
 install(PROGRAMS
    my_robot_arm/gripper.py
    my_robot_arm/arm.py
+   my_robot_arm/allow_coke_collision.py
    DESTINATION lib/${PROJECT_NAME}
 )
